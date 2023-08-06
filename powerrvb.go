@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"os"
 	// "strings"
-
 	"context"
 	"net/url"
 
@@ -89,10 +88,10 @@ func LoadPortGroups() error {
 
 	fmt.Printf("Port groups for vDS '%s':\n", vDSName)
 	for _, pg := range pgs {
-		r, _ := regexp.Compile("\\d+")
+		r, _ := regexp.Compile("^\\d+")
 		match := r.FindString(pg.Name)
 		pgNumber, _ := strconv.Atoi(match)
-		if pgNumber > tomlConf.StartingPortGroup && pgNumber < tomlConf.EndingPortGroup {
+		if pgNumber >= tomlConf.StartingPortGroup && pgNumber < tomlConf.EndingPortGroup {
 			availablePortGroups.Data[pgNumber] = pg.Name
 			fmt.Printf("%d\n", pgNumber)
 		}
@@ -171,17 +170,20 @@ func CloneOnDemand(data models.InvokeCloneOnDemandForm, username string, passwor
 		}
 	}
 	availablePortGroups.Mu.Unlock()
-	cmd := exec.Command("powershell", "C:\\Users\\administrator.sdc\\cloneondemand.ps1", data.Template, username, password, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
+	cmd := exec.Command("powershell", ".\\pwsh\\cloneondemand.ps1", data.Template, username, password, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
+
 	err := cmd.Run()
 	if err != nil {
 		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return "", err
 	}
+
+	fmt.Println("bruh ", out.String(), stderr.String())
 
 	return nextAvailablePortGroup, nil
 }

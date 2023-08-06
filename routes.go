@@ -10,9 +10,10 @@ func PublicRoutes(g *gin.RouterGroup) {
 	// g.GET("/", controllers.IndexGetHandler())
 	
 	g.GET("/templates/guest", TemplateGuestViewHandler())
-	g.POST("/clone/ondemand", CloneOnDemandHandler())
 	g.POST("/login", UserLoginHandler())
 	g.POST("/register", UserRegisterHandler())
+	g.POST("/api/auth", AuthHandler())
+	g.POST("/clone/ondemand", CloneOnDemandHandler())
 }
 
 func PrivateRoutes(g *gin.RouterGroup) {

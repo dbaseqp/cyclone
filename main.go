@@ -47,7 +47,7 @@ func main() {
 
 	private := router.Group("/")
 	private.Use(JwtAuthRequired)
-	routes.PrivateRoutes(private)
+	PrivateRoutes(private)
 
 	LoadPortGroups()
 

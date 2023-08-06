@@ -1,11 +1,23 @@
 package main
 
 import (
-	// "errors"
+	"errors"
 	// "log"
 	"math/rand"
 	"time"
+	"fmt"
+	"strings"
+	"context"
+	"net/url"
+	"os/exec"
+	"bytes"
+	"regexp"
+
+	"github.com/vmware/govmomi"
+	"github.com/vmware/govmomi/vim25/soap"
+
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -80,7 +92,70 @@ func ExtractTokenUsername(c *gin.Context) (string, error) {
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		return claims["username"], nil
+		return claims["username"].(string), nil
 	}
 	return "", nil
+}
+
+func ValidateVsphereCredentials(username string, password string) error {
+	ctx := context.Background()
+	u, err := soap.ParseURL(tomlConf.VCenterURL)
+	if err != nil {
+		fmt.Printf("Error parsing vCenter URL: %s\n", err)
+		return err
+	}
+
+	u.User = url.UserPassword(username, password)
+
+	client, err := govmomi.NewClient(ctx, u, true)
+	if err != nil {
+		fmt.Printf("Error creating vSphere client for %s: %s\n", username, err)
+		return err
+	}
+	defer client.Logout(ctx)
+	return nil
+}
+
+func ValidateJWT(token string) error {
+	ctx := context.Background()
+	u, err := soap.ParseURL(tomlConf.VCenterURL)
+	if err != nil {
+		fmt.Printf("Error parsing vCenter URL: %s\n", err)
+		return err
+	}
+	creds := strings.Split(token, ":")
+	username := creds[0]
+	password := creds[1]
+	u.User = url.UserPassword(username, password)
+
+	client, err := govmomi.NewClient(ctx, u, true)
+	if err != nil {
+		fmt.Printf("Error creating vSphere client for %s: %s\n", username, err)
+		return err
+	}
+	defer client.Logout(ctx)
+	return nil
+}
+
+func RegisterUser(username string, password string) error {
+	matched, _ := regexp.MatchString(`^\w{1,16}$`, username)
+
+	if !matched {
+		return errors.New("Username must not exceed 16 characters and may only contain letters, numbers, or an underscore (_)!")
+	}
+
+	cmd := exec.Command("powershell", "New-PodUser", username, fmt.Sprintf("'%s'", password))
+
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return errors.New("Failed to register user!")
+	}
+	
+	return nil
 }

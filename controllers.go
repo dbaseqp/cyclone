@@ -4,9 +4,10 @@ import (
 	// "net/http"
 	// "strconv"
 	"fmt"
+	"strings"
 
 	"github.com/gin-gonic/gin"
-	jwt "github.com/dgrijalva/jwt-go"
+	// jwt "github.com/dgrijalva/jwt-go"
 
 	"bruharmy/models"
 )
@@ -42,36 +43,90 @@ func CloneOnDemandHandler() gin.HandlerFunc {
 		// formdata = models.InvokeCloneOnDemandForm{
 		// 	Template: c.PostForm("template"),
 		// }
-		username := "Bruharmy"
+		// username := "Bruharmy"
+		username := strings.Split(formdata.SessionKey,":")[0]
 		password := GeneratePassword(12)
 
-		pg, err := CloneOnDemand(formdata, username, password)
+		_, err := CloneOnDemand(formdata, username, password)
+		// username = fmt.Sprintf("%s_%s", username, pg)
 		
 		if err != nil {
-			c.JSON(400, gin.H{"message": "Problem cloning pod"})
+			c.JSON(401, gin.H{"message": "Problem cloning pod"})
 			// c.Abort()
 			return
 		}
-		c.JSON(200, gin.H{"message": gin.H{"username": fmt.Sprintf("%s_%s", username, pg), "password": password}})
+		// c.JSON(200, gin.H{"message": gin.H{"username": username, "password": password}})
+		c.JSON(200, gin.H{"message": "success"})
 	}
+}
 
-	func UserRegisterHandler() gin.HandlerFunc {
-		return func(c *gin.Context) {
-			
+func UserRegisterHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var formdata models.LoginForm
+	
+		if c.ShouldBindJSON(&formdata) != nil {
+			c.JSON(406, gin.H{"message": "Missing fields"})
+			// c.Abort()
+			return
 		}
+
+		err := RegisterUser(formdata.Username, formdata.Password)
+
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(400, gin.H{"message": err.Error()})
+			return
+		}
+
+		c.JSON(200, gin.H{"message": "success"})
 	}
+}
 
-	func UserLoginHandler() gin.HandlerFunc {
-		return func(c *gin.Context) {
-			user := &models.User{
-				Username: "test",
-				Role: "guest"
-			}
-			token, err := GenerateToken(user.Username)
-			if err != nil {
-				c.JSON(401, gin.H{"message": "Invalid session"})
-			}
-			c.JSON(200, gin.H{"message": token})
+func UserLoginHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var formdata models.LoginForm
+	
+		if c.ShouldBindJSON(&formdata) != nil {
+			c.JSON(406, gin.H{"message": "Missing fields"})
+			// c.Abort()
+			return
 		}
+		// user := &models.User{
+		// 	Username: "test",
+		// 	Role: "guest",
+		// }
+		// token, err := GenerateToken(user.Username)
+		// if err != nil {
+		// 	c.JSON(401, gin.H{"message": "Invalid session"})
+		// }
+
+		if ValidateVsphereCredentials(formdata.Username, formdata.Password) != nil {
+			c.JSON(401, gin.H{"message": "Invalid credentials"})
+			return
+		}
+		token := fmt.Sprintf("%s:%s", formdata.Username, formdata.Password)
+		c.JSON(200, gin.H{"message": token})
+	}
+}
+
+func AuthHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var formdata models.AuthForm
+
+		if c.ShouldBindJSON(&formdata) != nil {
+			c.JSON(401, gin.H{"message": "Missing fields"})
+			// c.Abort()
+			return
+		}
+
+		// token, err := GenerateToken(user.Username)
+		// if err != nil {
+		// 	c.JSON(401, gin.H{"message": "Invalid session"})
+		// }
+		if ValidateJWT(formdata.SessionKey) != nil {
+			c.JSON(401, gin.H{"message": "Unauthorized"})
+			return
+		}
+		c.JSON(200, gin.H{"message": "success"})
 	}
 }
