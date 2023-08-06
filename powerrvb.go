@@ -209,8 +209,5 @@ func DeletePod(data models.DeletePodForm, username string) error {
 	delete(availablePortGroups.Data, deleted_pg)
 	availablePortGroups.Mu.Unlock()
 
-	fmt.Println("bruh ", out.String(), stderr.String())
-	fmt.Println(availablePortGroups.Data)
-
 	return nil
 }
