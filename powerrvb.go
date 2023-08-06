@@ -2,13 +2,15 @@ package main
 
 import (
 	// "errors"
-	"log"
-	"fmt"
-	"os/exec"
 	"bytes"
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
-	"os"
+	"strings"
+
 	// "strings"
 	"context"
 	"net/url"
@@ -25,7 +27,7 @@ import (
 
 var (
 	availablePortGroups = &models.RWPortGroupMap{}
-	vDSName	string
+	vDSName             string
 )
 
 func LoadPortGroups() error {
@@ -95,7 +97,7 @@ func LoadPortGroups() error {
 			availablePortGroups.Data[pgNumber] = pg.Name
 			fmt.Printf("%d\n", pgNumber)
 		}
-	}	
+	}
 	log.Printf("Found %d port groups within on-demand DistributedPortGroup range: %d - %d", len(availablePortGroups.Data), tomlConf.StartingPortGroup, tomlConf.EndingPortGroup)
 	return nil
 }
@@ -134,8 +136,8 @@ func TemplateGuestView() ([]string, error) {
 
 	if err != nil {
 		fmt.Printf("Error finding guest templates: %s\n", err)
-	} 
-	
+	}
+
 	var trp mo.ResourcePool
 	err = templateResourcePool.Properties(ctx, templateResourcePool.Reference(), []string{"resourcePool"}, &trp)
 	if err != nil {
@@ -159,7 +161,7 @@ func TemplateGuestView() ([]string, error) {
 	return templates, nil
 }
 
-func CloneOnDemand(data models.InvokeCloneOnDemandForm, username string, password string) (string, error) {
+func CloneOnDemand(data models.InvokeCloneOnDemandForm, username string) (string, error) {
 	var nextAvailablePortGroup string
 	availablePortGroups.Mu.Lock()
 	for i := tomlConf.StartingPortGroup; i < tomlConf.EndingPortGroup; i++ {
@@ -170,7 +172,7 @@ func CloneOnDemand(data models.InvokeCloneOnDemandForm, username string, passwor
 		}
 	}
 	availablePortGroups.Mu.Unlock()
-	cmd := exec.Command("powershell", ".\\pwsh\\cloneondemand.ps1", data.Template, username, password, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
+	cmd := exec.Command("powershell", ".\\pwsh\\cloneondemand.ps1", data.Template, username, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
@@ -186,4 +188,29 @@ func CloneOnDemand(data models.InvokeCloneOnDemandForm, username string, passwor
 	fmt.Println("bruh ", out.String(), stderr.String())
 
 	return nextAvailablePortGroup, nil
+}
+
+func DeletePod(data models.DeletePodForm, username string) error {
+	cmd := exec.Command("powershell", ".\\pwsh\\deletepod.ps1", username, data.Target)
+
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return err
+	}
+
+	availablePortGroups.Mu.Lock()
+	deleted_pg, _ := strconv.Atoi(strings.Split(data.Target, "_")[0])
+	delete(availablePortGroups.Data, deleted_pg)
+	availablePortGroups.Mu.Unlock()
+
+	fmt.Println("bruh ", out.String(), stderr.String())
+	fmt.Println(availablePortGroups.Data)
+
+	return nil
 }

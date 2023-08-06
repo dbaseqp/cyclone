@@ -1,4 +1,5 @@
 package main
+
 import (
 	// "log"
 	// "net/http"
@@ -21,7 +22,7 @@ func PingGetHandler() gin.HandlerFunc {
 func TemplateGuestViewHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		templates, err := TemplateGuestView()
-		
+
 		if err != nil {
 			c.JSON(500, gin.H{"message": "Problem getting templates"})
 			// c.Abort()
@@ -34,7 +35,7 @@ func TemplateGuestViewHandler() gin.HandlerFunc {
 func CloneOnDemandHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var formdata models.InvokeCloneOnDemandForm
-		
+
 		if c.ShouldBindJSON(&formdata) != nil {
 			c.JSON(406, gin.H{"message": "Missing fields"})
 			// c.Abort()
@@ -44,14 +45,42 @@ func CloneOnDemandHandler() gin.HandlerFunc {
 		// 	Template: c.PostForm("template"),
 		// }
 		// username := "Bruharmy"
-		username := strings.Split(formdata.SessionKey,":")[0]
-		password := GeneratePassword(12)
+		username := strings.Split(formdata.SessionKey, ":")[0]
+		//password := GeneratePassword(12)
 
-		_, err := CloneOnDemand(formdata, username, password)
+		_, err := CloneOnDemand(formdata, username)
 		// username = fmt.Sprintf("%s_%s", username, pg)
-		
+
 		if err != nil {
 			c.JSON(401, gin.H{"message": "Problem cloning pod"})
+			// c.Abort()
+			return
+		}
+		// c.JSON(200, gin.H{"message": gin.H{"username": username, "password": password}})
+		c.JSON(200, gin.H{"message": "success"})
+	}
+}
+
+func DeletePodHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var formdata models.DeletePodForm
+
+		if c.ShouldBindJSON(&formdata) != nil {
+			c.JSON(406, gin.H{"message": "Missing fields"})
+			// c.Abort()
+			return
+		}
+		// formdata = models.InvokeCloneOnDemandForm{
+		// 	Template: c.PostForm("template"),
+		// }
+		// username := "Bruharmy"
+		username := strings.Split(formdata.SessionKey, ":")[0]
+
+		err := DeletePod(formdata, username)
+		// username = fmt.Sprintf("%s_%s", username, pg)
+
+		if err != nil {
+			c.JSON(401, gin.H{"message": "Problem deleting pod"})
 			// c.Abort()
 			return
 		}
@@ -63,7 +92,7 @@ func CloneOnDemandHandler() gin.HandlerFunc {
 func UserRegisterHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var formdata models.LoginForm
-	
+
 		if c.ShouldBindJSON(&formdata) != nil {
 			c.JSON(406, gin.H{"message": "Missing fields"})
 			// c.Abort()
@@ -85,7 +114,7 @@ func UserRegisterHandler() gin.HandlerFunc {
 func UserLoginHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var formdata models.LoginForm
-	
+
 		if c.ShouldBindJSON(&formdata) != nil {
 			c.JSON(406, gin.H{"message": "Missing fields"})
 			// c.Abort()
