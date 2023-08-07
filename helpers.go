@@ -116,12 +116,12 @@ func ValidateVsphereCredentials(username string, password string) error {
 	return nil
 }
 
-func ValidateJWT(token string) error {
+func ValidateJWT(token string) (string, error) {
 	ctx := context.Background()
 	u, err := soap.ParseURL(tomlConf.VCenterURL)
 	if err != nil {
 		fmt.Printf("Error parsing vCenter URL: %s\n", err)
-		return err
+		return "", err
 	}
 	creds := strings.Split(token, ":")
 	username := creds[0]
@@ -131,10 +131,10 @@ func ValidateJWT(token string) error {
 	client, err := govmomi.NewClient(ctx, u, true)
 	if err != nil {
 		fmt.Printf("Error creating vSphere client for %s: %s\n", username, err)
-		return err
+		return "", err
 	}
 	defer client.Logout(ctx)
-	return nil
+	return username, nil
 }
 
 func RegisterUser(username string, password string) error {

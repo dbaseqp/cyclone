@@ -5,18 +5,19 @@ import (
 )
 
 func PublicRoutes(g *gin.RouterGroup) {
-	// g.GET("/login", controllers.LoginGetHandler())
-	// g.POST("/login", controllers.LoginPostHandler())
-	// g.GET("/", controllers.IndexGetHandler())
+	// account/authentication endpoints
+	g.POST("/account/login", UserLoginHandler())
+	g.POST("/account/register", UserRegisterHandler())
+	g.POST("/account/auth", AuthHandler())
 
-	g.GET("/templates/guest", TemplateGuestViewHandler())
-	g.POST("/login", UserLoginHandler())
-	g.POST("/register", UserRegisterHandler())
-	g.POST("/api/auth", AuthHandler())
-	g.POST("/clone/ondemand", CloneOnDemandHandler())
-	g.POST("/pod/delete", DeletePodHandler())
+	// vsphere pod endpoints
+	g.GET("/pods/templates", TemplateGuestViewHandler())
+	g.POST("/pods/clone", CloneOnDemandHandler())
+	g.POST("/pods/view", PodViewHandler())
+	g.POST("/pods/delete", DeletePodHandler())
+
 }
 
 func PrivateRoutes(g *gin.RouterGroup) {
-	g.GET("/ping", PingGetHandler())
+	
 }

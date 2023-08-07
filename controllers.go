@@ -19,19 +19,6 @@ func PingGetHandler() gin.HandlerFunc {
 	}
 }
 
-func TemplateGuestViewHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		templates, err := TemplateGuestView()
-
-		if err != nil {
-			c.JSON(500, gin.H{"message": "Problem getting templates"})
-			// c.Abort()
-			return
-		}
-		c.JSON(200, gin.H{"message": templates})
-	}
-}
-
 func CloneOnDemandHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var formdata models.InvokeCloneOnDemandForm
@@ -52,12 +39,54 @@ func CloneOnDemandHandler() gin.HandlerFunc {
 		// username = fmt.Sprintf("%s_%s", username, pg)
 
 		if err != nil {
-			c.JSON(401, gin.H{"message": "Problem cloning pod"})
+			c.JSON(401, gin.H{"message": err.Error()})
 			// c.Abort()
 			return
 		}
 		// c.JSON(200, gin.H{"message": gin.H{"username": username, "password": password}})
 		c.JSON(200, gin.H{"message": "success"})
+	}
+}
+
+func TemplateGuestViewHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		templates, err := TemplateGuestView()
+
+		if err != nil {
+			c.JSON(500, gin.H{"message": "Problem getting templates"})
+			// c.Abort()
+			return
+		}
+		c.JSON(200, gin.H{"message": templates})
+	}
+}
+
+func PodViewHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var formdata models.AuthForm
+
+		if c.ShouldBindJSON(&formdata) != nil {
+			c.JSON(401, gin.H{"message": "Missing fields"})
+			// c.Abort()
+			return
+		}
+
+		username, err := ValidateJWT(formdata.SessionKey)
+
+		if err != nil {
+			c.JSON(401, gin.H{"message": "Unauthorized"})
+			return
+		}
+
+		userPods, err := ViewPods(username)
+
+		if err != nil {
+			c.JSON(500, gin.H{"message": "Problem getting pods"})
+			// c.Abort()
+			return
+		}
+
+		c.JSON(200, gin.H{"message": userPods})
 	}
 }
 
@@ -152,7 +181,8 @@ func AuthHandler() gin.HandlerFunc {
 		// if err != nil {
 		// 	c.JSON(401, gin.H{"message": "Invalid session"})
 		// }
-		if ValidateJWT(formdata.SessionKey) != nil {
+		_, err := ValidateJWT(formdata.SessionKey)
+		if err != nil {
 			c.JSON(401, gin.H{"message": "Unauthorized"})
 			return
 		}

@@ -1,7 +1,7 @@
 package main
 
 import (
-	// "errors"
+	"errors"
 	"bytes"
 	"fmt"
 	"log"
@@ -161,8 +161,78 @@ func TemplateGuestView() ([]string, error) {
 	return templates, nil
 }
 
+func ViewPods(owner string) ([]string, error) {
+	pods := make([]string, 0)
+
+	ctx := context.Background()
+	u, err := soap.ParseURL(tomlConf.VCenterURL)
+	if err != nil {
+		fmt.Printf("Error parsing vCenter URL: %s\n", err)
+		os.Exit(1)
+	}
+
+	u.User = url.UserPassword(tomlConf.VCenterUsername, tomlConf.VCenterPassword)
+
+	client, err := govmomi.NewClient(ctx, u, true)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Error creating vSphere client: %s\n", err))
+	}
+	defer client.Logout(ctx)
+
+	finder := find.NewFinder(client.Client, true)
+
+	// Find datacenter in the vSphere environment
+	dc, err := finder.Datacenter(ctx, tomlConf.Datacenter)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Error finding datacenter: %s\n", err))
+	}
+
+	finder.SetDatacenter(dc)
+
+	ownerPods, err := finder.VirtualAppList(ctx, fmt.Sprintf("*_%s", owner))
+
+	// No pods found
+	if err != nil {
+		if _, ok := err.(*find.NotFoundError); ok {
+			return pods, nil
+		}
+		return nil, err
+	}
+
+	// Collect found DistributedVirtualPortgroup refs
+	var refs []types.ManagedObjectReference
+	for _, podRef := range ownerPods {
+		refs = append(refs, podRef.Reference())
+	}
+
+	pc := property.DefaultCollector(client.Client)
+
+	var rps []mo.ResourcePool
+	err = pc.Retrieve(ctx, refs, []string{"name"}, &rps)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Error collecting references: %s\n", err))
+	}
+
+	for _, rp := range rps {
+		pods = append(pods, rp.Name)
+	}
+
+	return pods, nil
+}
+
 func CloneOnDemand(data models.InvokeCloneOnDemandForm, username string) (string, error) {
 	var nextAvailablePortGroup string
+
+	existingPods, err := ViewPods(username)
+
+	if err != nil {
+		return "", err
+	}
+
+	if len(existingPods) >= 5 {
+		return "", errors.New("Max limit of pods already reached")
+	}
+
 	availablePortGroups.Mu.Lock()
 	for i := tomlConf.StartingPortGroup; i < tomlConf.EndingPortGroup; i++ {
 		if _, exists := availablePortGroups.Data[i]; !exists {
@@ -176,16 +246,16 @@ func CloneOnDemand(data models.InvokeCloneOnDemandForm, username string) (string
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
+
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
-
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		fmt.Println(stderr.String())
 		return "", err
 	}
 
-	fmt.Println("bruh ", out.String(), stderr.String())
+	fmt.Println(stderr.String())
 
 	return nextAvailablePortGroup, nil
 }
