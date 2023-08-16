@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"os/exec"
+
 	// "log"
 
 	"context"
@@ -150,7 +151,6 @@ func RegisterUser(username string, password string) error {
 	if !matched {
 		return errors.New("Password must be between 8 and 40 characters and may not contain a colon (:) or single quote (')!")
 	}
-	fmt.Println(matched)
 
 	cmd := exec.Command("powershell", "New-PodUser", username, fmt.Sprintf("'%s'", password))
 
