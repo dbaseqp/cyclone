@@ -1,17 +1,18 @@
 package main
 
 import (
-	"errors"
-	// "log"
-	"math/rand"
-	"time"
-	"fmt"
-	"strings"
-	"context"
-	"net/url"
-	"os/exec"
 	"bytes"
+	"errors"
+	"os/exec"
+	// "log"
+
+	"context"
+	"fmt"
+	"math/rand"
+	"net/url"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/vim25/soap"
@@ -144,6 +145,13 @@ func RegisterUser(username string, password string) error {
 		return errors.New("Username must not exceed 16 characters and may only contain letters, numbers, or an underscore (_)!")
 	}
 
+	matched, _ = regexp.MatchString(`^[^:']{8,40}$`, password)
+
+	if !matched {
+		return errors.New("Password must be between 8 and 40 characters and may not contain a colon (:) or single quote (')!")
+	}
+	fmt.Println(matched)
+
 	cmd := exec.Command("powershell", "New-PodUser", username, fmt.Sprintf("'%s'", password))
 
 	var out bytes.Buffer
@@ -156,6 +164,6 @@ func RegisterUser(username string, password string) error {
 		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return errors.New("Failed to register user!")
 	}
-	
+
 	return nil
 }
