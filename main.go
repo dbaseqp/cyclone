@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"io"
 
 	"github.com/gin-gonic/gin"
 	// "github.com/gin-contrib/cors"
@@ -27,16 +28,19 @@ func main() {
 
 	// setup logging
 	gin.SetMode(gin.ReleaseMode)
+	gin.DisableConsoleColor()
 
-	f, err := os.OpenFile("kamino.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	models.ReadConfig(tomlConf, configPath)
+	
+	f, err := os.OpenFile(tomlConf.LogPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "failed to open log file"))
 	}
 	defer f.Close()
 
 	log.SetOutput(f)
+	gin.DefaultWriter = io.MultiWriter(f)
 
-	models.ReadConfig(tomlConf, configPath)
 	err = models.CheckConfig(tomlConf)
 	if err != nil {
 		log.Fatalln(errors.Wrap(err, "illegal config"))

@@ -35,6 +35,7 @@ type Config struct {
 	Domain			string
 	WanPortGroup	string
 	JwtSecret		string
+	LogPath			string
 }
 
 /*
