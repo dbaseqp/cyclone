@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
+	// "github.com/gin-contrib/cors"
 	"github.com/pkg/errors"
 	"github.com/thinkerou/favicon"
 
@@ -32,10 +32,7 @@ func main() {
 	// setup router
 	router := gin.Default()
 	router.Use(favicon.New("./assets/favicon.ico"))
-	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"*"},
-		AllowHeaders: []string{"*"},
-	}))
+	router.Use(CorsMiddleware())
 	router.Static("/assets", "./assets")
 	// router.LoadHTMLGlob("templates/*.html")
 	router.MaxMultipartMemory = 8 << 20 // 8Mib

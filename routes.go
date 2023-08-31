@@ -11,7 +11,7 @@ func PublicRoutes(g *gin.RouterGroup) {
 	g.POST("/account/auth", AuthHandler())
 
 	// vsphere pod endpoints
-	g.GET("/pods/templates", TemplateGuestViewHandler())
+	g.POST("/pods/templates", TemplateGuestViewHandler())
 	g.POST("/pods/clone", CloneOnDemandHandler())
 	g.POST("/pods/view", PodViewHandler())
 	g.POST("/pods/delete", DeletePodHandler())

@@ -102,7 +102,7 @@ func LoadPortGroups() error {
 	return nil
 }
 
-func TemplateGuestView() ([]string, error) {
+func TemplateGuestView(username string, password string) ([]string, error) {
 	var templates []string
 
 	ctx := context.Background()
@@ -111,8 +111,9 @@ func TemplateGuestView() ([]string, error) {
 		fmt.Printf("Error parsing vCenter URL: %s\n", err)
 		os.Exit(1)
 	}
+	fmt.Println(username, password)
 
-	u.User = url.UserPassword(tomlConf.VCenterUsername, tomlConf.VCenterPassword)
+	u.User = url.UserPassword(username, password)
 
 	client, err := govmomi.NewClient(ctx, u, true)
 	if err != nil {
@@ -136,6 +137,7 @@ func TemplateGuestView() ([]string, error) {
 
 	if err != nil {
 		fmt.Printf("Error finding guest templates: %s\n", err)
+		return templates, err
 	}
 
 	var trp mo.ResourcePool

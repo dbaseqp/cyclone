@@ -50,12 +50,26 @@ func CloneOnDemandHandler() gin.HandlerFunc {
 
 func TemplateGuestViewHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		templates, err := TemplateGuestView()
+		var formdata models.AuthForm
 
-		if err != nil {
-			c.JSON(500, gin.H{"message": "Problem getting templates"})
+		if c.ShouldBindJSON(&formdata) != nil {
+			c.JSON(401, gin.H{"message": "Missing fields"})
 			// c.Abort()
 			return
+		}
+
+		creds := strings.Split(formdata.SessionKey, ":")
+
+		templates, err := TemplateGuestView(creds[0], creds[1])
+
+		if err != nil {
+			templates, err = TemplateGuestView(tomlConf.VCenterUsername, tomlConf.VCenterPassword)
+			fmt.Println(err)
+			if err != nil {
+				c.JSON(500, gin.H{"message": "Problem getting templates"})
+				// c.Abort()
+				return
+			}
 		}
 		c.JSON(200, gin.H{"message": templates})
 	}
