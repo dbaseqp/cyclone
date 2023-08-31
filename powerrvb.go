@@ -1,8 +1,8 @@
 package main
 
 import (
-	"errors"
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -40,7 +40,7 @@ func LoadPortGroups() error {
 	ctx := context.Background()
 	u, err := soap.ParseURL(tomlConf.VCenterURL)
 	if err != nil {
-		fmt.Printf("Error parsing vCenter URL: %s\n", err)
+		log.Printf("Error parsing vCenter URL: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -48,7 +48,7 @@ func LoadPortGroups() error {
 
 	client, err := govmomi.NewClient(ctx, u, true)
 	if err != nil {
-		fmt.Printf("Error creating vSphere client: %s\n", err)
+		log.Printf("Error creating vSphere client: %s\n", err)
 		os.Exit(1)
 	}
 	defer client.Logout(ctx)
@@ -58,7 +58,7 @@ func LoadPortGroups() error {
 	// Find datacenter in the vSphere environment
 	dc, err := finder.Datacenter(ctx, tomlConf.Datacenter)
 	if err != nil {
-		fmt.Printf("Error finding datacenter: %s\n", err)
+		log.Printf("Error finding datacenter: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -68,7 +68,7 @@ func LoadPortGroups() error {
 	podNetworks, err := finder.NetworkList(ctx, "*_PodNetwork")
 
 	if err != nil {
-		fmt.Printf("Error listing networks: %s\n", err)
+		log.Printf("Error listing networks: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -84,18 +84,16 @@ func LoadPortGroups() error {
 	var pgs []mo.DistributedVirtualPortgroup
 	err = pc.Retrieve(ctx, refs, []string{"name"}, &pgs)
 	if err != nil {
-		fmt.Printf("Error collecting references: %s\n", err)
+		log.Printf("Error collecting references: %s\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("Port groups for vDS '%s':\n", vDSName)
 	for _, pg := range pgs {
 		r, _ := regexp.Compile("^\\d+")
 		match := r.FindString(pg.Name)
 		pgNumber, _ := strconv.Atoi(match)
 		if pgNumber >= tomlConf.StartingPortGroup && pgNumber < tomlConf.EndingPortGroup {
 			availablePortGroups.Data[pgNumber] = pg.Name
-			fmt.Printf("%d\n", pgNumber)
 		}
 	}
 	log.Printf("Found %d port groups within on-demand DistributedPortGroup range: %d - %d", len(availablePortGroups.Data), tomlConf.StartingPortGroup, tomlConf.EndingPortGroup)
@@ -108,16 +106,15 @@ func TemplateGuestView(username string, password string) ([]string, error) {
 	ctx := context.Background()
 	u, err := soap.ParseURL(tomlConf.VCenterURL)
 	if err != nil {
-		fmt.Printf("Error parsing vCenter URL: %s\n", err)
+		log.Printf("Error parsing vCenter URL: %s\n", err)
 		os.Exit(1)
 	}
-	fmt.Println(username, password)
 
 	u.User = url.UserPassword(username, password)
 
 	client, err := govmomi.NewClient(ctx, u, true)
 	if err != nil {
-		fmt.Printf("Error creating vSphere client: %s\n", err)
+		log.Printf("Error creating vSphere client: %s\n", err)
 		os.Exit(1)
 	}
 	defer client.Logout(ctx)
@@ -127,7 +124,7 @@ func TemplateGuestView(username string, password string) ([]string, error) {
 	// Find datacenter in the vSphere environment
 	dc, err := finder.Datacenter(ctx, tomlConf.Datacenter)
 	if err != nil {
-		fmt.Printf("Error finding datacenter: %s\n", err)
+		log.Printf("Error finding datacenter: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -136,14 +133,14 @@ func TemplateGuestView(username string, password string) ([]string, error) {
 	templateResourcePool, err := finder.ResourcePool(ctx, tomlConf.TemplateResourcePool)
 
 	if err != nil {
-		fmt.Printf("Error finding guest templates: %s\n", err)
+		log.Printf("Error finding guest templates: %s\n", err)
 		return templates, err
 	}
 
 	var trp mo.ResourcePool
 	err = templateResourcePool.Properties(ctx, templateResourcePool.Reference(), []string{"resourcePool"}, &trp)
 	if err != nil {
-		fmt.Printf("Error getting child resource pools: %s\n", err)
+		log.Printf("Error getting child resource pools: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -152,7 +149,7 @@ func TemplateGuestView(username string, password string) ([]string, error) {
 	var rps []mo.ResourcePool
 	err = pc.Retrieve(ctx, trp.ResourcePool, []string{"name"}, &rps)
 	if err != nil {
-		fmt.Printf("Error collecting references: %s\n", err)
+		log.Printf("Error collecting references: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -169,7 +166,7 @@ func ViewPods(owner string) ([]string, error) {
 	ctx := context.Background()
 	u, err := soap.ParseURL(tomlConf.VCenterURL)
 	if err != nil {
-		fmt.Printf("Error parsing vCenter URL: %s\n", err)
+		log.Printf("Error parsing vCenter URL: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -253,11 +250,11 @@ func CloneOnDemand(data models.InvokeCloneOnDemandForm, username string) (string
 	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println(stderr.String())
+		log.Println(stderr.String())
 		return "", err
 	}
 
-	fmt.Println(stderr.String())
+	log.Println(stderr.String())
 
 	return nextAvailablePortGroup, nil
 }
@@ -272,7 +269,7 @@ func DeletePod(data models.DeletePodForm, username string) error {
 
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		log.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return err
 	}
 

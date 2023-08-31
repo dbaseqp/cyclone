@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"log"
 	"os/exec"
 
 	// "log"
@@ -103,7 +104,7 @@ func ValidateVsphereCredentials(username string, password string) error {
 	ctx := context.Background()
 	u, err := soap.ParseURL(tomlConf.VCenterURL)
 	if err != nil {
-		fmt.Printf("Error parsing vCenter URL: %s\n", err)
+		log.Printf("Error parsing vCenter URL: %s\n", err)
 		return err
 	}
 
@@ -111,7 +112,7 @@ func ValidateVsphereCredentials(username string, password string) error {
 
 	client, err := govmomi.NewClient(ctx, u, true)
 	if err != nil {
-		fmt.Printf("Error creating vSphere client for %s: %s\n", username, err)
+		log.Printf("Error creating vSphere client for %s: %s\n", username, err)
 		return err
 	}
 	defer client.Logout(ctx)
@@ -122,7 +123,7 @@ func ValidateJWT(token string) (string, error) {
 	ctx := context.Background()
 	u, err := soap.ParseURL(tomlConf.VCenterURL)
 	if err != nil {
-		fmt.Printf("Error parsing vCenter URL: %s\n", err)
+		log.Printf("Error parsing vCenter URL: %s\n", err)
 		return "", err
 	}
 	creds := strings.Split(token, ":")
@@ -132,7 +133,7 @@ func ValidateJWT(token string) (string, error) {
 
 	client, err := govmomi.NewClient(ctx, u, true)
 	if err != nil {
-		fmt.Printf("Error creating vSphere client for %s: %s\n", username, err)
+		log.Printf("Error creating vSphere client for %s: %s\n", username, err)
 		return "", err
 	}
 	defer client.Logout(ctx)
@@ -161,7 +162,7 @@ func RegisterUser(username string, password string) error {
 
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		log.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return errors.New("Failed to register user!")
 	}
 

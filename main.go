@@ -2,8 +2,9 @@ package main
 
 import (
 	//"strings"
-	"log"
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	// "github.com/gin-contrib/cors"
@@ -14,7 +15,7 @@ import (
 )
 
 var (
-	tomlConf = &models.Config{}
+	tomlConf   = &models.Config{}
 	configPath = "config.conf"
 )
 
@@ -23,8 +24,20 @@ func main() {
 	// if _, err := os.Stat("./database.db"); errors.Is(err, os.ErrNotExist) {
 	// 	create_database()
 	// }
+
+	// setup logging
+	gin.SetMode(gin.ReleaseMode)
+
+	f, err := os.OpenFile("kamino.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatal(errors.Wrap(err, "failed to open log file"))
+	}
+	defer f.Close()
+
+	log.SetOutput(f)
+
 	models.ReadConfig(tomlConf, configPath)
-	err := models.CheckConfig(tomlConf)
+	err = models.CheckConfig(tomlConf)
 	if err != nil {
 		log.Fatalln(errors.Wrap(err, "illegal config"))
 	}
@@ -49,9 +62,9 @@ func main() {
 	LoadPortGroups()
 
 	if tomlConf.Https {
-		log.Fatal(router.RunTLS(":" + fmt.Sprint(tomlConf.Port), tomlConf.Cert, tomlConf.Key))
+		log.Fatalln(router.RunTLS(":"+fmt.Sprint(tomlConf.Port), tomlConf.Cert, tomlConf.Key))
 	} else {
-		log.Fatal(router.Run(":" + fmt.Sprint(tomlConf.Port)))
+		log.Fatalln(router.Run(":" + fmt.Sprint(tomlConf.Port)))
 	}
 }
 
@@ -78,5 +91,5 @@ func main() {
 // 		os.Exit(1)
 // 	}
 // 	defer db.Close()
-	
+
 // }

@@ -5,6 +5,7 @@ import (
 	// "net/http"
 	// "strconv"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -64,7 +65,7 @@ func TemplateGuestViewHandler() gin.HandlerFunc {
 
 		if err != nil {
 			templates, err = TemplateGuestView(tomlConf.VCenterUsername, tomlConf.VCenterPassword)
-			fmt.Println(err)
+			log.Println(err)
 			if err != nil {
 				c.JSON(500, gin.H{"message": "Problem getting templates"})
 				// c.Abort()
@@ -145,7 +146,7 @@ func UserRegisterHandler() gin.HandlerFunc {
 		err := RegisterUser(formdata.Username, formdata.Password)
 
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			c.JSON(400, gin.H{"message": err.Error()})
 			return
 		}
