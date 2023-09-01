@@ -13,8 +13,8 @@ variables:
   programPath: 'C:\Program Files\Kamino'
 
 steps:
-- powershell: |
-    git clone https://github.com/dbaseqp/bruharmy/ C:\bruharmy\ | Out-Null
+- script: |
+    git clone https://github.com/dbaseqp/bruharmy/ C:\bruharmy\
   displayName: 'Pull src from Github'
 
 - powershell: |
