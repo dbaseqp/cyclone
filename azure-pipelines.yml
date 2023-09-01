@@ -10,20 +10,17 @@ pool:
   name: BruhArmyTesting
 
 variables:
-  workingPath: 'C:'
   programPath: 'C:\Program Files\Kamino'
 
 steps:
-- script: |
-    powershell.exe -c "pwd"
-    powershell.exe -c 'git clone https://github.com/dbaseqp/bruharmy/ C:\bruharmy\'
-  workingDirectory: '$(workingPath)'
+- powershell: |
+    pwd
+    git clone https://github.com/dbaseqp/bruharmy/ C:\bruharmy\
   displayName: 'Pull src from Github'
 
-- script: |
-    powershell.exe -c "pwd"
-    powershell.exe -c "go build -o '$(programPath)'"
-    powershell.exe -c "cp .\assets\ '$(programPath)' -Recurse"
-    powershell.exe -c "cp .\lib\ '$(programPath)' -Recurse"
-  workingDirectory: '$(workingPath)\bruharmy'
+- powershell: |
+    pwd
+    go build -o '$(programPath)'
+    cp .\assets\ '$(programPath)' -Recurse
+    cp .\lib\ '$(programPath)' -Recurse
   displayName: 'Build executable, move assets and lib'
