@@ -22,6 +22,7 @@ steps:
     go build -o '$(programPath)'
     cp .\assets\ '$(programPath)' -Recurse -Force
     cp .\lib\ '$(programPath)' -Recurse -Force
+    cp .\config.conf '$(programPath)' -Force
   displayName: 'Build executable, move assets and lib'
 
 - powershell: |
