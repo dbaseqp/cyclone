@@ -19,8 +19,8 @@ steps:
 
 - powershell: |
     go build -o '$(programPath)'
-    cp .\assets\ '$(programPath)' -Recurse
-    cp .\lib\ '$(programPath)' -Recurse
+    cp .\assets\ '$(programPath)' -Recurse -Force
+    cp .\lib\ '$(programPath)' -Recurse -Force
   displayName: 'Build executable, move assets and lib'
 
 - powershell: |
@@ -32,3 +32,7 @@ steps:
     $pfSenseCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $pfSenseUser, $pfSensePass
     $vSphereCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $vSphereUser, $vSpherePass
     $pfSenseCredential | Export-CliXml -Path '$(programPath)\lib\creds'
+
+- powershell: |
+    rm 'C:\bruharmy' -Recurse -Force
+  displayName: 'Cleanup'
