@@ -16,7 +16,7 @@ variables:
 steps:
 - script: |
     powershell.exe -c "pwd"
-    powershell.exe -c 'git clone https://github.com/dbaseqp/bruharmy/'
+    powershell.exe -c 'git clone https://github.com/dbaseqp/bruharmy/ C:\bruharmy\'
   workingDirectory: '$(workingPath)'
   displayName: 'Pull src from Github'
 
