@@ -15,11 +15,13 @@ variables:
 
 steps:
 - script: |
+    powershell.exe -c "pwd"
     powershell.exe -c 'git clone https://github.com/dbaseqp/bruharmy/'
   workingDirectory: '$(workingPath)'
   displayName: 'Pull src from Github'
 
 - script: |
+    powershell.exe -c "pwd"
     powershell.exe -c "go build -o '$(programPath)'"
     powershell.exe -c "cp .\assets\ '$(programPath)' -Recurse"
     powershell.exe -c "cp .\lib\ '$(programPath)' -Recurse"
