@@ -7,7 +7,7 @@ trigger:
 - main
 
 pool:
-  name: BruhArmyTesting
+  name: KaminoProduction
 
 variables:
   programPath: 'C:\Program Files\Kamino'
