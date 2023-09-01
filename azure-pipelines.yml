@@ -36,3 +36,4 @@ steps:
 - powershell: |
     rm 'C:\bruharmy' -Recurse -Force
   displayName: 'Cleanup'
+  ignoreLASTEXITCODE: true
