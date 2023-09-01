@@ -1,0 +1,38 @@
+# Go
+# Build your Go project.
+# Add steps that test, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/go
+
+trigger:
+- main
+
+pool:
+  name: BruhArmyTesting
+
+variables:
+  programPath: 'C:\Program Files\Kamino'
+
+steps:
+- script: |
+    git clone https://github.com/dbaseqp/bruharmy/ C:\bruharmy\
+  displayName: 'Pull src from Github'
+
+- powershell: |
+    go build -o '$(programPath)'
+    cp .\assets\ '$(programPath)' -Recurse -Force
+    cp .\lib\ '$(programPath)' -Recurse -Force
+  displayName: 'Build executable, move assets and lib'
+
+- powershell: |
+    mkdir '$(programPath)\lib\creds'
+    $pfSenseUser = 'root'
+    $vSphereUser = 'SDC\bruharmycloner'
+    $pfSensePass = ConvertTo-SecureString -AsPlainText '$(pfSensePassword)' -Force
+    $vSpherePass = ConvertTo-SecureString -AsPlainText '$(vSpherePass)' -Force
+    $pfSenseCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $pfSenseUser, $pfSensePass
+    $vSphereCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $vSphereUser, $vSpherePass
+    $pfSenseCredential | Export-CliXml -Path '$(programPath)\lib\creds'
+
+- powershell: |
+    rm 'C:\bruharmy' -Recurse -Force
+  displayName: 'Cleanup'
