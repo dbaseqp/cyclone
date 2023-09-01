@@ -14,9 +14,7 @@ variables:
 
 steps:
 - powershell: |
-    pwd
-    set GIT_REDIRECT_STDERR=2>&1
-    git clone https://github.com/dbaseqp/bruharmy/ C:\bruharmy\
+    git clone https://github.com/dbaseqp/bruharmy/ C:\bruharmy\ | Out-Null
   displayName: 'Pull src from Github'
 
 - powershell: |
