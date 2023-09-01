@@ -18,8 +18,17 @@ steps:
   displayName: 'Pull src from Github'
 
 - powershell: |
-    pwd
     go build -o '$(programPath)'
     cp .\assets\ '$(programPath)' -Recurse
     cp .\lib\ '$(programPath)' -Recurse
   displayName: 'Build executable, move assets and lib'
+
+- powershell: |
+    mkdir '$(programPath)\lib\creds'
+    $pfSenseUser = 'root'
+    $vSphereUser = 'SDC\bruharmycloner'
+    $pfSensePass = ConvertTo-SecureString -AsPlainText '$(pfSensePassword)' -Force
+    $vSpherePass = ConvertTo-SecureString -AsPlainText '$(vSpherePass)' -Force
+    $pfSenseCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $pfSenseUser, $pfSensePass
+    $vSphereCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $vSphereUser, $vSpherePass
+    $pfSenseCredential | Export-CliXml -Path '$(programPath)\lib\creds'
