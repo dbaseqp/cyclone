@@ -18,20 +18,20 @@ steps:
   displayName: 'Pull src from Github'
 
 - powershell: |
+    Stop-Service -Name 'Kamino'
     go build -o '$(programPath)'
     cp .\assets\ '$(programPath)' -Recurse -Force
     cp .\lib\ '$(programPath)' -Recurse -Force
   displayName: 'Build executable, move assets and lib'
 
 - powershell: |
-    mkdir '$(programPath)\lib\creds'
-    $pfSenseUser = 'root'
-    $vSphereUser = 'SDC\bruharmycloner'
-    $pfSensePass = ConvertTo-SecureString -AsPlainText '$(pfSensePassword)' -Force
-    $vSpherePass = ConvertTo-SecureString -AsPlainText '$(vSpherePass)' -Force
-    $pfSenseCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $pfSenseUser, $pfSensePass
-    $vSphereCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $vSphereUser, $vSpherePass
-    $pfSenseCredential | Export-CliXml -Path '$(programPath)\lib\creds'
+    rm "C:\Program Files\WindowsPowerShell\Modules\BruhArmy" -Recurse -Force
+    Install-Module BruhArmy -Force
+  displayName: 'Install Latest BruhArmy module'
+
+- powershell: |
+    Start-Service -Name 'Kamino'
+  displayName: 'Start Kamino service'
 
 - powershell: |
     rm 'C:\bruharmy' -Recurse -Force
