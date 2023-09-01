@@ -9,6 +9,8 @@ param(
 
 $pg = [int] $Port
 
+Write-Host 'test'
+
 $cred = Import-CliXML -Path $env:ProgramFiles\Kamino\lib\creds\vsphere_cred.xml
 Connect-VIServer elsa.sdc.cpp -Credential $cred
 
