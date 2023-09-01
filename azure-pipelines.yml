@@ -10,7 +10,7 @@ pool:
   name: BruhArmyTesting
 
 variables:
-  workingPath: 'C:\agent\_work'
+  workingPath: 'C:'
   programPath: 'C:\Program Files\Kamino'
 
 steps:
