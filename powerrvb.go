@@ -88,7 +88,7 @@ func LoadPortGroups() error {
 		os.Exit(1)
 	}
 
-	for _, pg := range pgs {
+	for _, pg := range pgs {		
 		r, _ := regexp.Compile("^\\d+")
 		match := r.FindString(pg.Name)
 		pgNumber, _ := strconv.Atoi(match)

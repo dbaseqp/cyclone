@@ -162,8 +162,11 @@ func RegisterUser(username string, password string) error {
 
 	err := cmd.Run()
 	if err != nil {
-		log.Println(fmt.Sprint(err) + ": " + stderr.String())
-		return errors.New("Failed to register user!")
+		//log.Println(fmt.Sprint(err) + ": " + stderr.String())
+		if strings.Contains(stderr.String(), "is not available.") {
+			return errors.New("Username " + username + " is not available!")
+		}
+		return errors.New("Failed to register account!")
 	}
 
 	return nil
