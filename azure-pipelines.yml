@@ -7,7 +7,7 @@ resources:
   repositories:
   - repository: cyclone
     type: github
-    endpoint: Github
+    endpoint: dbaseqp
     name:  dbaseqp/cyclone
 
 trigger:
