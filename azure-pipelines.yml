@@ -20,7 +20,7 @@ variables:
 
 steps:
 - script: |
-    git clone https://github.com/dbaseqp/bruharmy/ C:\bruharmy\
+    git clone https://github.com/dbaseqp/cyclone/ C:\cyclone\
   displayName: 'Pull src from Github'
 
 - powershell: |
