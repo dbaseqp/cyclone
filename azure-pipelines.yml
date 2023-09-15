@@ -31,11 +31,15 @@ steps:
   displayName: 'Pull src from Github'
 
 - powershell: |
+    rm 'C:\cyclone' -Recurse -Force
+  displayName: 'Cleanup'
+
+- powershell: |
     cd 'C:\'
     Stop-Service -Name 'Kamino'
     cp "$(Agent.BuildDirectory)/s/cyclone" "C:\cyclone" -Recurse -Force
     cd "C:\cyclone"
-    go mod tidy
+    go mod tidy 2>&1
     go build -o '$(programPath)'
     cp .\pwsh\ '$(programPath)' -Recurse -Force
     cp .\config.conf '$(programPath)' -Force
@@ -50,7 +54,3 @@ steps:
     Start-Service -Name 'Kamino'
   displayName: 'Start Kamino service'
 
-- powershell: |
-    rm 'C:\bruharmy' -Recurse -Force
-  displayName: 'Cleanup'
-  ignoreLASTEXITCODE: true
