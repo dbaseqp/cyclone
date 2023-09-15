@@ -33,11 +33,12 @@ steps:
 - powershell: |
     pwd
     ls
-    Stop-Service -Name 'Kamino'
-    cp 's/cyclone' 'C:\cyclone' -Recurse -Force
-    go build -o '$(programPath)'
-    cp .\pwsh\ '$(programPath)' -Recurse -Force
-    cp .\config.conf '$(programPath)' -Force
+    ls 'C:\agent\_work\' -Recurse
+#    Stop-Service -Name 'Kamino'
+#    cp 's/cyclone' 'C:\cyclone' -Recurse -Force
+#    go build -o '$(programPath)'
+#    cp .\pwsh\ '$(programPath)' -Recurse -Force
+#    cp .\config.conf '$(programPath)' -Force
   displayName: 'Build executable, move assets and lib'
 
 - powershell: |
