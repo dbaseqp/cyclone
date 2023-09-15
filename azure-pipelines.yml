@@ -4,7 +4,13 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/go
 
 trigger:
-- main
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - README.md
+    - azure-pipelines.yml
 
 pool:
   name: KaminoProduction
@@ -20,8 +26,7 @@ steps:
 - powershell: |
     Stop-Service -Name 'Kamino'
     go build -o '$(programPath)'
-    cp .\assets\ '$(programPath)' -Recurse -Force
-    cp .\lib\ '$(programPath)' -Recurse -Force
+    cp .\pwsh\ '$(programPath)' -Recurse -Force
     cp .\config.conf '$(programPath)' -Force
   displayName: 'Build executable, move assets and lib'
 
