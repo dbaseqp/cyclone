@@ -31,14 +31,13 @@ steps:
   displayName: 'Pull src from Github'
 
 - powershell: |
-    pwd
-    ls
-    ls 'C:\agent\_work\' -Recurse
-#    Stop-Service -Name 'Kamino'
-#    cp 's/cyclone' 'C:\cyclone' -Recurse -Force
-#    go build -o '$(programPath)'
-#    cp .\pwsh\ '$(programPath)' -Recurse -Force
-#    cp .\config.conf '$(programPath)' -Force
+    cd 'C:\'
+    Stop-Service -Name 'Kamino'
+    cp "$(Agent.BuildDirectory)/s/cyclone" "C:\cyclone" -Recurse -Force
+    cd "C:\cyclone"
+    go build -o '$(programPath)'
+    cp .\pwsh\ '$(programPath)' -Recurse -Force
+    cp .\config.conf '$(programPath)' -Force
   displayName: 'Build executable, move assets and lib'
 
 - powershell: |
