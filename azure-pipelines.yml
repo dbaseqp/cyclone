@@ -39,6 +39,7 @@ steps:
     Stop-Service -Name 'Kamino'
     cp "$(Agent.BuildDirectory)/s/cyclone" "C:\cyclone" -Recurse -Force
     cd "C:\cyclone"
+    (Get-Content .\main.go) -replace ('https://bruharmy.sdc.cpp', 'https://kamino.sdc.cpp') | Set-Content .\main.go
     go mod tidy 2>&1
     go build -o '$(programPath)'
     cp .\pwsh\ '$(programPath)' -Recurse -Force
