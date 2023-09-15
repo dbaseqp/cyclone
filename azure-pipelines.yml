@@ -27,11 +27,12 @@ variables:
 
 steps:
 - checkout: cyclone
-  path: 'C:\cyclone'
+  path: 's/cyclone'
   displayName: 'Pull src from Github'
 
 - powershell: |
     Stop-Service -Name 'Kamino'
+    cp 's/cyclone' 'C:\cyclone' -Recurse -Force
     go build -o '$(programPath)'
     cp .\pwsh\ '$(programPath)' -Recurse -Force
     cp .\config.conf '$(programPath)' -Force
