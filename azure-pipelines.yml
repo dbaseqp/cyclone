@@ -26,8 +26,8 @@ variables:
   programPath: 'C:\Program Files\Kamino'
 
 steps:
-- script: |
-    git clone https://github.com/dbaseqp/cyclone/ C:\cyclone\
+- checkout: cyclone
+  path: 'C:\cyclone'
   displayName: 'Pull src from Github'
 
 - powershell: |
