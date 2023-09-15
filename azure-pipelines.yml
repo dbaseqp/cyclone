@@ -35,7 +35,7 @@ steps:
     Stop-Service -Name 'Kamino'
     cp "$(Agent.BuildDirectory)/s/cyclone" "C:\cyclone" -Recurse -Force
     cd "C:\cyclone"
-    go init
+    go mod init
     go mod tidy
     go build -o '$(programPath)'
     cp .\pwsh\ '$(programPath)' -Recurse -Force
