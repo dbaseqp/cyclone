@@ -31,6 +31,8 @@ steps:
   displayName: 'Pull src from Github'
 
 - powershell: |
+    pwd
+    ls
     Stop-Service -Name 'Kamino'
     cp 's/cyclone' 'C:\cyclone' -Recurse -Force
     go build -o '$(programPath)'
