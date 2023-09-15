@@ -1,0 +1,56 @@
+# Go
+# Build your Go project.
+# Add steps that test, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/go
+
+resources:
+  repositories:
+  - repository: cyclone
+    type: github
+    endpoint: dbaseqp
+    name:  dbaseqp/cyclone
+
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - README.md
+    - azure-pipelines.yml
+
+pool:
+  name: KaminoProduction
+
+variables:
+  programPath: 'C:\Program Files\Kamino'
+
+steps:
+- checkout: cyclone
+  path: 's/cyclone'
+  displayName: 'Pull src from Github'
+
+- powershell: |
+    cd 'C:\'
+    Stop-Service -Name 'Kamino'
+    cp "$(Agent.BuildDirectory)/s/cyclone" "C:\cyclone" -Recurse -Force
+    cd "C:\cyclone"
+    go mod tidy
+    go build -o '$(programPath)'
+    cp .\pwsh\ '$(programPath)' -Recurse -Force
+    cp .\config.conf '$(programPath)' -Force
+  displayName: 'Build executable, move assets and lib'
+
+- powershell: |
+    rm "C:\Program Files\WindowsPowerShell\Modules\BruhArmy" -Recurse -Force
+    Install-Module BruhArmy -Force
+  displayName: 'Install Latest BruhArmy module'
+
+- powershell: |
+    Start-Service -Name 'Kamino'
+  displayName: 'Start Kamino service'
+
+- powershell: |
+    rm 'C:\bruharmy' -Recurse -Force
+  displayName: 'Cleanup'
+  ignoreLASTEXITCODE: true
