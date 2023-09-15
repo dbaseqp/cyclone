@@ -1,69 +1,92 @@
 package main
 
 import (
-	//"strings"
+	"context"
 	"fmt"
 	"log"
-	"os"
-	"io"
+	"net/url"
 
 	"github.com/gin-gonic/gin"
-	// "github.com/gin-contrib/cors"
 	"github.com/pkg/errors"
-	"github.com/thinkerou/favicon"
+	"github.com/vmware/govmomi"
+	"github.com/vmware/govmomi/find"
+	"github.com/vmware/govmomi/vim25/soap"
 
-	"bruharmy/models"
+	"bruhstorm/models"
 )
 
 var (
-	tomlConf   = &models.Config{}
-	configPath = "config.conf"
+	tomlConf      = &models.Config{}
+	configPath    = "config.conf"
+	mainCtx       = context.Background()
+	vSphereClient = &govmomi.Client{}
+	finder        = &find.Finder{}
 )
 
 func main() {
-	// setup database
-	// if _, err := os.Stat("./database.db"); errors.Is(err, os.ErrNotExist) {
-	// 	create_database()
-	// }
-
-	// setup logging
-	gin.SetMode(gin.ReleaseMode)
-	gin.DisableConsoleColor()
-
+	// setup config
 	models.ReadConfig(tomlConf, configPath)
-	
-	f, err := os.OpenFile(tomlConf.LogPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		log.Fatal(errors.Wrap(err, "failed to open log file"))
-	}
-	defer f.Close()
-
-	log.SetOutput(f)
-	gin.DefaultWriter = io.MultiWriter(f)
-
-	err = models.CheckConfig(tomlConf)
+	err := models.CheckConfig(tomlConf)
 	if err != nil {
 		log.Fatalln(errors.Wrap(err, "illegal config"))
 	}
 
+	// setup vSphere client
+	u, err := soap.ParseURL(tomlConf.VCenterURL)
+	if err != nil {
+		log.Fatalln(errors.Wrap(err, "Error parsing vCenter URL"))
+	}
+
+	u.User = url.UserPassword(tomlConf.VCenterUsername, tomlConf.VCenterPassword)
+
+	vSphereClient, err = govmomi.NewClient(mainCtx, u, true)
+	if err != nil {
+		log.Fatalln(errors.Wrap(err, "Error creating vSphere client"))
+	}
+	defer vSphereClient.Logout(mainCtx)
+
+	finder = find.NewFinder(vSphereClient.Client, true)
+
+	dc, err := finder.Datacenter(mainCtx, tomlConf.Datacenter)
+	if err != nil {
+		log.Fatalln(errors.Wrap(err, "Error finding datacenter"))
+	}
+
+	finder.SetDatacenter(dc)
+
+	// call before go routine to ensure it finishes before starting router
+	err = vSphereLoadTakenPortGroups()
+	if err != nil {
+		log.Fatalln(errors.Wrap(err, "Error finding taken port groups"))
+	}
+
+	go refreshSession()
+
+	// setup logging
+	// gin.SetMode(gin.ReleaseMode)
+	// gin.DisableConsoleColor()
+
+	// f, err := os.OpenFile(tomlConf.LogPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	// if err != nil {
+	// 	log.Fatal(errors.Wrap(err, "failed to open log file"))
+	// }
+	// defer f.Close()
+
+	// log.SetOutput(f)
+	// gin.DefaultWriter = io.MultiWriter(f)
+
 	// setup router
 	router := gin.Default()
-	router.Use(favicon.New("./assets/favicon.ico"))
-	router.Use(CorsMiddleware())
-	router.Static("/assets", "./assets")
-	// router.LoadHTMLGlob("templates/*.html")
+	router.Use(CORSMiddleware())
 	router.MaxMultipartMemory = 8 << 20 // 8Mib
-
-	// router.Use(sessions.Sessions("session", cookie.NewStore(globals.Secret)))
+	initCookies(router)
 
 	public := router.Group("/")
-	PublicRoutes(public)
+	addPublicRoutes(public)
 
 	private := router.Group("/")
-	private.Use(JwtAuthRequired)
-	PrivateRoutes(private)
-
-	LoadPortGroups()
+	private.Use(authRequired)
+	addPrivateRoutes(private)
 
 	if tomlConf.Https {
 		log.Fatalln(router.RunTLS(":"+fmt.Sprint(tomlConf.Port), tomlConf.Cert, tomlConf.Key))
@@ -72,28 +95,19 @@ func main() {
 	}
 }
 
-// func create_database() {
-// 	os.Create("./database.db")
-// 	stmt := ``
-// 	db, err := sql.Open("sqlite3", "./database.db")
-// 	if err != nil {
-// 		log.Println("Failed to open database!")
-// 		os.Exit(1)
-// 	}
-// 	// sql
-// 	stmt = `
-// 	PRAGMA foreign_keys = ON;
-// 	CREATE TABLE users (user_id INTEGER PRIMARY KEY AUTOINCREMENT, username VARCHAR(64) NOT NULL, password VARCHAR(64) NOT NULL, color VARCHAR(7) DEFAULT "#777777");
-// 	INSERT INTO users (user_id, username, password) VALUES (0, "No Assignee", "");
-// 	CREATE TABLE boxes (ip VARCHAR(64) PRIMARY KEY, hostname VARCHAR(64) NULL, codename VARCHAR(64) NULL, assignee INTEGER DEFAULT 0, usershells INTEGER DEFAULT 0, rootshells INTEGER DEFAULT 0, FOREIGN KEY (assignee) REFERENCES users(user_id));
-// 	CREATE TABLE ports (port_id INTEGER PRIMARY KEY AUTOINCREMENT, port_number INTEGER NOT NULL, protocol VARCHAR(64) NOT NULL, service_name VARCHAR(64) NULL, service_details VARCHAR(8192), box_ip VARCHAR(64) NOT NULL, FOREIGN KEY (box_ip) REFERENCES boxes(ip));
-// 	CREATE TABLE credentials (credential_id INTEGER PRIMARY KEY AUTOINCREMENT, ip VARCHAR(64) NULL, hostname VARCHAR(64) NULL, port INTEGER NOT NULL, service VARCHAR(64) NOT NULL, username VARCHAR(64) NOT NULL, password VARCHAR(64) NOT NULL);
-// 	`
-// 	_, err = db.Exec(stmt)
-// 	if err != nil {
-// 		log.Println("Failed to create tables!", err)
-// 		os.Exit(1)
-// 	}
-// 	defer db.Close()
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Content-Type", "application/json")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "https://bruharmy.sdc.cpp")
+		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Origin")
 
-// }
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(200)
+		}
+
+		c.Next()
+	}
+}

@@ -1,18 +1,11 @@
 package models
 
 import (
-	"errors"
-	// "fmt"
-	"io/ioutil"
 	"log"
-	// "reflect"
-	// "regexp"
-	// "sort"
-	// "strconv"
-	// "strings"
-	// "time"
+	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -20,29 +13,30 @@ var (
 )
 
 type Config struct {
-	VCenterURL		string
-	VCenterUsername	string
-	VCenterPassword	string
-	Datacenter		string
-	TemplateResourcePool	string
-	StartingPortGroup	int
-	EndingPortGroup		int
-	Https           bool
-	Port            int
-	Cert            string
-	Key             string
-	TargetResourcePool		string
-	Domain			string
-	WanPortGroup	string
-	JwtSecret		string
-	LogPath			string
+	VCenterURL                 string
+	VCenterUsername            string
+	VCenterPassword            string
+	Datacenter                 string
+	PresetTemplateResourcePool string
+	StartingPortGroup          int
+	EndingPortGroup            int
+	Https                      bool
+	Port                       int
+	Cert                       string
+	Key                        string
+	TargetResourcePool         string
+	Domain                     string
+	WanPortGroup               string
+	MaxPodLimit                int
+	LogPath                    string
+	MainDistributedSwitch      string
 }
 
 /*
-	Load config settings into given config object
+Load config settings into given config object
 */
 func ReadConfig(conf *Config, configPath string) {
-	fileContent, err := ioutil.ReadFile(configPath)
+	fileContent, err := os.ReadFile(configPath)
 	if err != nil {
 		log.Fatalln("Configuration file ("+configPath+") not found:", err)
 	}
@@ -58,10 +52,9 @@ func ReadConfig(conf *Config, configPath string) {
 }
 
 /*
-	Check for config errors and set defaults
+Check for config errors and set defaults
 */
 func CheckConfig(conf *Config) error {
-
 	if conf.VCenterURL == "" {
 		return errors.New("illegal config: vCenterURL must be defined")
 	}
@@ -74,8 +67,11 @@ func CheckConfig(conf *Config) error {
 	if conf.Datacenter == "" {
 		return errors.New("illegal config: Datacenter must be defined")
 	}
-	if conf.TemplateResourcePool == "" {
-		return errors.New("illegal config: TemplateResourcePool must be defined")
+	if conf.PresetTemplateResourcePool == "" {
+		return errors.New("illegal config: PresetTemplateResourcePool must be defined")
+	}
+	if conf.MainDistributedSwitch == "" {
+		return errors.New("illegal config: MainDistributedSwitch must be defined")
 	}
 
 	if conf.StartingPortGroup == 0 || conf.EndingPortGroup == 0 {
@@ -95,8 +91,8 @@ func CheckConfig(conf *Config) error {
 		}
 	}
 
-	if conf.JwtSecret == "" {
-		return errors.New("illegal config: JwtSecret must be defined")
+	if conf.MaxPodLimit == 0 {
+		return errors.New("illegal config: MaxPodLimit must be more than 0")
 	}
 
 	return nil
