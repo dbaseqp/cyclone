@@ -10,6 +10,7 @@ trigger:
   paths:
     exclude:
     - README.md
+    - azure-pipelines.yml
 
 pool:
   name: KaminoProduction
