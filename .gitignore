@@ -23,5 +23,4 @@ go.work
 # Other
 bruharmy
 *.swp
-*.conf
 lib/*
