@@ -134,7 +134,7 @@ func register(c *gin.Context) {
 		return
 	}
 
-	cmd := exec.Command("powershell", "New-PodUser", username, fmt.Sprintf("'%s'", password))
+	cmd := exec.Command("/bin/bash", "./ldap/user_ldap.sh", username, fmt.Sprintf("'%s'", password))
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
@@ -144,7 +144,7 @@ func register(c *gin.Context) {
 	err := cmd.Run()
 	if err != nil {
 		//log.Println(fmt.Sprint(err) + ": " + stderr.String())
-		if strings.Contains(stderr.String(), "is not available.") {
+		if strings.Contains(stderr.String(), "exists") {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Username %s is not available!", username)})
 			return
 		}
