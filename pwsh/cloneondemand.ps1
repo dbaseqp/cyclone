@@ -10,6 +10,6 @@ param(
 $pg = [int] $Port
 
 $cred = Import-CliXML -Path .\lib\creds\vsphere_cred.xml
-Connect-VIServer elsa.sdc.cpp -Credential $cred
+Connect-VIServer {vcenterfqdn} -Credential $cred
 
 Invoke-WebClone -SourceResourcePool $Template -Target $Target -Portgroup $pg -Domain $domain -WanPortGroup $WanPG -Username $Username
