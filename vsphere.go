@@ -201,7 +201,7 @@ func vSphereGetPods(owner string) ([]models.Pod, error) {
 }
 
 func vSphereDeletePod(podId string, username string) error {
-	cmd := exec.Command("powershell", ".\\pwsh\\deletepod.ps1", username, podId)
+	cmd := exec.Command("pwsh", ".\\pwsh\\deletepod.ps1", username, podId)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
@@ -239,7 +239,7 @@ func vSphereTemplateClone(templateId string, username string) error {
 		}
 	}
 	availablePortGroups.Mu.Unlock()
-	cmd := exec.Command("powershell", ".\\pwsh\\cloneondemand.ps1", templateId, username, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
+	cmd := exec.Command("pwsh", ".\\pwsh\\cloneondemand.ps1", templateId, username, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
@@ -288,7 +288,7 @@ func vSphereCustomClone(podName string, vmsToClone []string, nat bool, username 
 	}
 
 	vms := strings.Join(formattedSlice, ",")
-	cmd := exec.Command("powershell", ".\\pwsh\\customclone.ps1", podName, username, vms, natString, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
+	cmd := exec.Command("pwsh", ".\\pwsh\\customclone.ps1", podName, username, vms, natString, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
