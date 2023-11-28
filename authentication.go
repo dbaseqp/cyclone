@@ -134,7 +134,7 @@ func register(c *gin.Context) {
 		return
 	}
 
-	cmd := exec.Command("/bin/bash", "./ldap/user_ldap.sh", username, fmt.Sprintf("'%s'", password))
+	cmd := exec.Command("/bin/bash", "./ldap/user_ldap.sh", username, fmt.Sprintf("'%s'", password), tomlConf.LdapAdminPassword)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer

@@ -16,6 +16,7 @@ type Config struct {
 	VCenterURL                 string
 	VCenterUsername            string
 	VCenterPassword            string
+	LdapAdminPassword          string
 	Datacenter                 string
 	PresetTemplateResourcePool string
 	StartingPortGroup          int
