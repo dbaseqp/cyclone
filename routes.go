@@ -12,6 +12,7 @@ import (
 func addPublicRoutes(g *gin.RouterGroup) {
 	g.POST("/login", login)
 	g.POST("/register", register)
+	g.GET("/ping", ping)
 }
 
 func addPrivateRoutes(g *gin.RouterGroup) {
