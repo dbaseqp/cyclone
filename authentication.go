@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -12,7 +11,6 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	"github.com/go-ldap/ldap/v3"
 	"github.com/google/uuid"
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/vim25/soap"
@@ -127,45 +125,13 @@ func register(c *gin.Context) {
 		return
 	}
 
-	l, err := ldap.DialURL("ldap://ldap:389")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to LDAP server."})
-		return
-	}
-	defer l.Close()
+	message, err := ldapadd(username, password, tomlConf.LdapAdminPassword)
 
-	// Bind with Admin
-	err = l.Bind("cn=admin,dc=kamino,dc=labs", tomlConf.LdapAdminPassword)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to bind with LDAP server."})
+	if err != 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": message})
 		return
 	}
 
-	var stderr bytes.Buffer
+	c.JSON(http.StatusOK, gin.H{"message": message})
 
-	addRequest := ldap.NewAddRequest("uid="+username+",ou=users,dc=kamino,dc=labs", nil)
-	addRequest.Attribute("objectClass", []string{"top", "posixAccount", "shadowAccount", "inetOrgPerson"})
-	addRequest.Attribute("uid", []string{username})
-	addRequest.Attribute("cn", []string{username})
-	addRequest.Attribute("sn", []string{username})
-	addRequest.Attribute("userPassword", []string{password})
-	addRequest.Attribute("loginShell", []string{"/bin/bash"})
-	addRequest.Attribute("uidNumber", []string{"10000"})
-	addRequest.Attribute("gidNumber", []string{"10000"})
-	addRequest.Attribute("homeDirectory", []string{"/home/" + username})
-	addRequest.Attribute("shadowLastChange", []string{"0"})
-	addRequest.Attribute("shadowMax", []string{"99999"})
-	addRequest.Attribute("shadowWarning", []string{"7"})
-	err = l.Add(addRequest)
-
-	if err != nil {
-		//log.Println(fmt.Sprint(err) + ": " + stderr.String())
-		if strings.Contains(stderr.String(), "exists") {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Username %s is not available!", username)})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register your account. Please contact an administrator."})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "Account created successfully!"})
 }
