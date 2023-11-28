@@ -66,7 +66,7 @@ func login(c *gin.Context) {
 		return
 	}
 
-	u.User = url.UserPassword(username, password)
+	u.User = url.UserPassword(username+"@kamino.labs", password)
 
 	client, err := govmomi.NewClient(ctx, u, true)
 	if err != nil {

@@ -22,3 +22,11 @@ New-VIRole -Name KaminoUsersCustomPod -Privilege (Get-VIPrivilege -Id System.Ano
 if (!(Get-Folder -Name $env:inventorylocation)) {
     New-Folder -Name $env:inventorylocation -Location $env:datacenter
 }
+
+# Set Permissions
+$PermissionOptions = @{
+    Role = (Get-VIRole -Name 'ReadOnly');
+    Entity = (Get-ResourcePool -Name $env:parentresourcepool);
+    Principal = ('Kamino.Labs\Kamino Users')
+}
+New-VIPermission @PermissionOptions | Out-Null
