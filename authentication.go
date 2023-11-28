@@ -127,22 +127,23 @@ func register(c *gin.Context) {
 		return
 	}
 
-	ldap, err := ldap.Dial("tcp", "ldap://ldap:389")
+	l, err := ldap.Dial("tcp", "ldap://ldap:389")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to LDAP server."})
 		return
 	}
-	defer ldap.Close()
+	defer l.Close()
 
 	// Bind with Admin
-	err = ldap.Bind("cn=admin,dc=kamino,dc=labs", tomlConf.LdapAdminPassword)
+	err = l.Bind("cn=admin,dc=kamino,dc=labs", tomlConf.LdapAdminPassword)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to bind with LDAP server."})
 		return
 	}
 
 	var stderr bytes.Buffer
-	addRequest = ldap.NewAddRequest("uid="+username+",ou=users,dc=kamino,dc=labs", nil)
+
+	addRequest := ldap.NewAddRequest("uid="+username+",ou=users,dc=kamino,dc=labs", nil)
 	addRequest.Attribute("objectClass", []string{"top", "posixAccount", "shadowAccount", "inetOrgPerson"})
 	addRequest.Attribute("uid", []string{username})
 	addRequest.Attribute("cn", []string{username})
@@ -155,7 +156,7 @@ func register(c *gin.Context) {
 	addRequest.Attribute("shadowLastChange", []string{"0"})
 	addRequest.Attribute("shadowMax", []string{"99999"})
 	addRequest.Attribute("shadowWarning", []string{"7"})
-	err = ldap.Add(addRequest)
+	err = l.Add(addRequest)
 
 	if err != nil {
 		//log.Println(fmt.Sprint(err) + ": " + stderr.String())
