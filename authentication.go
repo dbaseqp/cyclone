@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os/exec"
 	"regexp"
 	"strings"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/go-ldap/ldap/v3"
 	"github.com/google/uuid"
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/vim25/soap"
@@ -127,21 +127,36 @@ func register(c *gin.Context) {
 		return
 	}
 
-	matched, _ = regexp.MatchString(`^[^:']{8,40}$`, password)
+	ldap, err := ldap.Dial("tcp", "ldap://ldap:389")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to LDAP server."})
+		return
+	}
+	defer ldap.Close()
 
-	if !matched {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Password must be between 8 and 40 characters and may not contain a colon (:) or single quote (')!"})
+	// Bind with Admin
+	err = ldap.Bind("cn=admin,dc=kamino,dc=labs", tomlConf.LdapAdminPassword)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to bind with LDAP server."})
 		return
 	}
 
-	cmd := exec.Command("/bin/bash", "./ldap/user_ldap.sh", username, fmt.Sprintf("'%s'", password), tomlConf.LdapAdminPassword)
-
-	var out bytes.Buffer
 	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
+	addRequest = ldap.NewAddRequest("uid="+username+",ou=users,dc=kamino,dc=labs", nil)
+	addRequest.Attribute("objectClass", []string{"top", "posixAccount", "shadowAccount", "inetOrgPerson"})
+	addRequest.Attribute("uid", []string{username})
+	addRequest.Attribute("cn", []string{username})
+	addRequest.Attribute("sn", []string{username})
+	addRequest.Attribute("userPassword", []string{password})
+	addRequest.Attribute("loginShell", []string{"/bin/bash"})
+	addRequest.Attribute("uidNumber", []string{"10000"})
+	addRequest.Attribute("gidNumber", []string{"10000"})
+	addRequest.Attribute("homeDirectory", []string{"/home/" + username})
+	addRequest.Attribute("shadowLastChange", []string{"0"})
+	addRequest.Attribute("shadowMax", []string{"99999"})
+	addRequest.Attribute("shadowWarning", []string{"7"})
+	err = ldap.Add(addRequest)
 
-	err := cmd.Run()
 	if err != nil {
 		//log.Println(fmt.Sprint(err) + ": " + stderr.String())
 		if strings.Contains(stderr.String(), "exists") {

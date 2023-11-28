@@ -17,3 +17,8 @@ if (!(Get-ResourcePool -Name $env:targetresourcepool)) {
 # Create Roles
 New-VIRole -Name KaminoUsers -Privilege (Get-VIPrivilege -Id System.Anonymous,System.Read,System.View,VApp.PowerOff,VApp.PowerOn,VirtualMachine.Interact.ConsoleInteract,VirtualMachine.Interact.PowerOff,VirtualMachine.Interact.PowerOn,VirtualMachine.Interact.Reset,VirtualMachine.State.RevertToSnapshot)
 New-VIRole -Name KaminoUsersCustomPod -Privilege (Get-VIPrivilege -Id System.Anonymous,System.Read,System.View,VApp.PowerOff,VApp.PowerOn,VirtualMachine.Interact.ConsoleInteract,VirtualMachine.Interact.PowerOff,VirtualMachine.Interact.PowerOn,VirtualMachine.Interact.Reset,VirtualMachine.State.CreateSnapshot,VirtualMachine.State.RevertToSnapshot,VirtualMachine.State.RemoveSnapshot,VirtualMachine.State.RenameSnapshot)
+
+# Create Folders
+if (!(Get-Folder -Name $env:inventorylocation)) {
+    New-Folder -Name $env:inventorylocation -Location $env:datacenter
+}
