@@ -127,7 +127,7 @@ func register(c *gin.Context) {
 		return
 	}
 
-	l, err := ldap.Dial("tcp", "ldap://ldap:389")
+	l, err := ldap.DialURL("ldap://ldap:389")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to LDAP server."})
 		return
