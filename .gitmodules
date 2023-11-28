@@ -1,0 +1,3 @@
+[submodule "pwsh/Kamino"]
+	path = pwsh/Kamino
+	url = https://github.com/evanjd711/Kamino
