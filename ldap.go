@@ -47,9 +47,9 @@ func registerUser(username string, password string, ldappassword string) (string
 		return message, 1
 	}
 
-	addRequest = ldap.NewAddRequest("cn=Kamino Users,ou=groups,dc=kamino,dc=labs", nil)
-	addRequest.Attribute("uniqueMember", []string{"uid=" + username + ",ou=users,dc=kamino,dc=labs"})
-	err = l.Add(addRequest)
+	modifyRequest := ldap.NewModifyRequest("cn=Kamino Users,ou=groups,dc=kamino,dc=labs", nil)
+	modifyRequest.Add("uniqueMember", []string{"uid=" + username + ",ou=users,dc=kamino,dc=labs"})
+	err = l.Modify(modifyRequest)
 
 	if err != nil {
 		message := err.Error()
