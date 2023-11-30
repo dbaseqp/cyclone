@@ -288,7 +288,7 @@ func vSphereCustomClone(podName string, vmsToClone []string, nat bool, username 
 	}
 
 	vms := strings.Join(formattedSlice, ",")
-	cmd := exec.Command("pwsh", ".\\pwsh\\customclone.ps1", podName, username, vms, natString, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
+	cmd := exec.Command("pwsh", "-Command", ".\\pwsh\\customclone.ps1", podName, username, vms, natString, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
