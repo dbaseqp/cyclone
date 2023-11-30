@@ -127,3 +127,7 @@ func invokePodCloneFromTemplate(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Pod deployed successfully!"})
 }
+
+func ping(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "pong"})
+}

@@ -52,7 +52,7 @@ func registerUser(username string, password string, ldappassword string) (string
 	err = l.Modify(modifyRequest)
 
 	if err != nil {
-		message := err.Error()
+		message := "Failed to register your account. Please contact an administrator."
 		return message, 1
 	}
 

@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/url"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -62,18 +64,18 @@ func main() {
 
 	go refreshSession()
 
-	// setup logging
-	// gin.SetMode(gin.ReleaseMode)
-	// gin.DisableConsoleColor()
+	//setup logging
+	gin.SetMode(gin.ReleaseMode)
+	gin.DisableConsoleColor()
 
-	// f, err := os.OpenFile(tomlConf.LogPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	// if err != nil {
-	// 	log.Fatal(errors.Wrap(err, "failed to open log file"))
-	// }
-	// defer f.Close()
+	f, err := os.OpenFile(tomlConf.LogPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatal(errors.Wrap(err, "failed to open log file"))
+	}
+	defer f.Close()
 
-	// log.SetOutput(f)
-	// gin.DefaultWriter = io.MultiWriter(f)
+	log.SetOutput(f)
+	gin.DefaultWriter = io.MultiWriter(f)
 
 	// setup router
 	router := gin.Default()

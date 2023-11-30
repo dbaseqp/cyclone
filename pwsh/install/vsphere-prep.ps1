@@ -12,6 +12,7 @@ if (!(Get-ResourcePool -Name $env:presettemplateresourcepool)) {
 
 if (!(Get-ResourcePool -Name $env:targetresourcepool)) {
     New-ResourcePool -Name $env:targetresourcepool -Location $env:parentresourcepool
+    New-ResourcePool -Name TipocaTemplateExample -Location $env:targetresourcepool
 }
 
 # Create Roles
