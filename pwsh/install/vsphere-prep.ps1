@@ -20,7 +20,7 @@ New-VIRole -Name KaminoUsersCustomPod -Privilege (Get-VIPrivilege -Id System.Ano
 
 # Create Folders
 if (!(Get-Folder -Name $env:inventorylocation)) {
-    New-Folder -Name $env:inventorylocation -Location $env:datacenter
+    Get-Datacenter -Name $env:datacenter | Get-Folder -Name vm | New-Folder -Name $env:inventorylocation
 }
 
 # Set Permissions

@@ -7,7 +7,7 @@ import (
 	"github.com/go-ldap/ldap/v3"
 )
 
-func ldapadd(username string, password string, ldappassword string) (string, int) {
+func registerUser(username string, password string, ldappassword string) (string, int) {
 	l, err := ldap.DialURL("ldap://ldap:389")
 	if err != nil {
 		message := "Failed to connect to LDAP server."
@@ -52,7 +52,7 @@ func ldapadd(username string, password string, ldappassword string) (string, int
 	err = l.Add(addRequest)
 
 	if err != nil {
-		message := "Failed to add your account to Kamino Users. Please contact an administrator."
+		message := err.Error()
 		return message, 1
 	}
 

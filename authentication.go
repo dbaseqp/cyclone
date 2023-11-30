@@ -125,7 +125,7 @@ func register(c *gin.Context) {
 		return
 	}
 
-	message, err := ldapadd(username, password, tomlConf.LdapAdminPassword)
+	message, err := registerUser(username, password, tomlConf.LdapAdminPassword)
 
 	if err != 0 {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": message})
