@@ -126,7 +126,7 @@ func vSphereGetPresetTemplates() ([]string, error) {
 func vSphereGetCustomTemplates() ([]gin.H, error) {
 	var templates []gin.H
 
-	templateFolder, err := finder.Folder(mainCtx, "Templates") // configuration
+	templateFolder, err := finder.Folder(mainCtx, "{templatefolder}") // configuration
 
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to find templates folder")
