@@ -1,5 +1,5 @@
 # Cyclone
-Cyclone is a Gin API that connects Bruharmy's Powershell module to a RESTful API. Ingested by Kamino.
+Cyclone is a Gin API that connects to the Kamino Powershell module to a RESTful API. Ingested by Kamino.
 
 ## Known Issues
 ### "Same-Origin-Policy" Errors on Firefox and Safari
