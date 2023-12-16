@@ -87,7 +87,7 @@ func main() {
 	addPublicRoutes(public)
 
 	private := router.Group("/")
-	private.Use(authRequired)
+	private.Use(validateAgainstSSO)
 	addPrivateRoutes(private)
 
 	if tomlConf.Https {

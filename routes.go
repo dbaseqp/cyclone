@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -10,7 +12,7 @@ import (
 )
 
 func addPublicRoutes(g *gin.RouterGroup) {
-	g.POST("/login", login)
+	g.GET("/login", tokenAuth)
 	g.POST("/register", register)
 	g.GET("/ping", ping)
 }
@@ -42,6 +44,11 @@ func addPrivateRoutes(g *gin.RouterGroup) {
 // 	}
 // 	return newGinMap
 // }
+
+func register(c *gin.Context) {
+	url := fmt.Sprintf("https://%s/register", os.Getenv("WSSO_FQDN"))
+	c.Redirect(http.StatusFound, url)
+}
 
 func getPresetTemplates(c *gin.Context) {
 	templates, err := vSphereGetPresetTemplates()
