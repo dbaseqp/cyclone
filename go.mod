@@ -1,4 +1,4 @@
-module bruhstorm
+module cyclone
 
 go 1.20
 
