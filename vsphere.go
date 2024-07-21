@@ -46,7 +46,7 @@ func refreshSession() {
 }
 
 func vSphereLoadTakenPortGroups() error {
-	podNetworks, err := finder.NetworkList(mainCtx, "*_{portgroupsuffix}")
+	podNetworks, err := finder.NetworkList(mainCtx, "*_"+tomlConf.PortGroupSuffix)
 	if err != nil {
 		return errors.Wrap(err, "Failed to list networks")
 	}
@@ -126,7 +126,7 @@ func vSphereGetPresetTemplates() ([]string, error) {
 func vSphereGetCustomTemplates() ([]gin.H, error) {
 	var templates []gin.H
 
-	templateFolder, err := finder.Folder(mainCtx, "{templatefolder}") // configuration
+	templateFolder, err := finder.Folder(mainCtx, tomlConf.TemplateFolder)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to find templates folder")
@@ -201,7 +201,7 @@ func vSphereGetPods(owner string) ([]models.Pod, error) {
 }
 
 func vSphereDeletePod(podId string, username string) error {
-	cmd := exec.Command("pwsh", ".\\pwsh\\deletepod.ps1", username, podId)
+	cmd := exec.Command("pwsh", ".\\pwsh\\deletepod.ps1", tomlConf.VCenterURL, username, podId)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
@@ -234,12 +234,12 @@ func vSphereTemplateClone(templateId string, username string) error {
 	for i := tomlConf.StartingPortGroup; i < tomlConf.EndingPortGroup; i++ {
 		if _, exists := availablePortGroups.Data[i]; !exists {
 			nextAvailablePortGroup = strconv.Itoa(i)
-			availablePortGroups.Data[i] = fmt.Sprintf("%s_{portgroupsuffix}", nextAvailablePortGroup)
+			availablePortGroups.Data[i] = fmt.Sprintf("%s_%s", nextAvailablePortGroup, tomlConf.PortGroupSuffix)
 			break
 		}
 	}
 	availablePortGroups.Mu.Unlock()
-	cmd := exec.Command("pwsh", ".\\pwsh\\cloneondemand.ps1", templateId, username, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
+	cmd := exec.Command("pwsh", ".\\pwsh\\cloneondemand.ps1", tomlConf.VCenterURL, templateId, username, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
@@ -269,7 +269,7 @@ func vSphereCustomClone(podName string, vmsToClone []string, nat bool, username 
 	for i := tomlConf.StartingPortGroup; i < tomlConf.EndingPortGroup; i++ {
 		if _, exists := availablePortGroups.Data[i]; !exists {
 			nextAvailablePortGroup = strconv.Itoa(i)
-			availablePortGroups.Data[i] = fmt.Sprintf("%s_{portgroupsuffix}", nextAvailablePortGroup)
+			availablePortGroups.Data[i] = fmt.Sprintf("%s_%s", nextAvailablePortGroup, tomlConf.PortGroupSuffix)
 			break
 		}
 	}
@@ -288,7 +288,7 @@ func vSphereCustomClone(podName string, vmsToClone []string, nat bool, username 
 	}
 
 	vms := strings.Join(formattedSlice, ",")
-	cmd := exec.Command("pwsh", "-Command", ".\\pwsh\\customclone.ps1", podName, username, vms, natString, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
+	cmd := exec.Command("pwsh", "-Command", ".\\pwsh\\customclone.ps1", tomlConf.VCenterURL, podName, username, vms, natString, nextAvailablePortGroup, tomlConf.TargetResourcePool, tomlConf.Domain, tomlConf.WanPortGroup)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer

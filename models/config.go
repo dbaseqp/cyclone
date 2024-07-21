@@ -32,6 +32,8 @@ type Config struct {
 	LogPath                    string
 	MainDistributedSwitch      string
 	DomainName                 string
+	TemplateFolder             string
+	PortGroupSuffix            string
 }
 
 /*
