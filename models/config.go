@@ -31,6 +31,7 @@ type Config struct {
 	MaxPodLimit                int
 	LogPath                    string
 	MainDistributedSwitch      string
+	DomainName                 string
 }
 
 /*
@@ -94,6 +95,10 @@ func CheckConfig(conf *Config) error {
 
 	if conf.MaxPodLimit == 0 {
 		return errors.New("illegal config: MaxPodLimit must be more than 0")
+	}
+
+	if conf.DomainName == "" {
+		return errors.New("illegal config: Must set DomainName")
 	}
 
 	return nil
