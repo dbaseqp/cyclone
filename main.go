@@ -14,7 +14,7 @@ import (
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/vim25/soap"
 
-	"bruhstorm/models"
+	"cyclone/models"
 )
 
 var (

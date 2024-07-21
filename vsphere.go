@@ -18,7 +18,7 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
-	"bruhstorm/models"
+	"cyclone/models"
 )
 
 type RWPortGroupMap struct {
